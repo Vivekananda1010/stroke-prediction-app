@@ -58,11 +58,11 @@ def predict(input_data):
     # Build df from input
     df = pd.DataFrame([input_data])
 
-    # ALWAYS align to what the model expects
+    # align exactly to training schema
     expected = list(model.feature_names_in_)
     df = df.reindex(columns=expected)
 
-    # numeric & categorical groups (from training)
+    # numeric & categorical columns
     num_cols = [
         "age",
         "avg_glucose_level",
@@ -79,13 +79,12 @@ def predict(input_data):
         "smoking_status",
     ]
 
-    # ---- CRITICAL: force exact dtypes ----
+    # force exact dtypes (CRITICAL)
     df[num_cols] = df[num_cols].apply(pd.to_numeric, errors="coerce").astype("float64")
     df[cat_cols] = df[cat_cols].astype(object)
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
-
     return prob, pred
 
 
@@ -103,9 +102,8 @@ with tab1:
 
     col1, col2 = st.columns(2)
     age = col1.slider("Age", 1, 100, 45)
-    gender = col2.selectbox("Gender", ["Male", "Female", "Other"])
+    gender = col2.selectbox("Gender", ["Male", "Female"])
 
-    # convert Yes/No to numeric (model expects numeric)
     ever_married = 1 if st.radio("Ever Married?", ["Yes", "No"]) == "Yes" else 0
 
     st.markdown("</div>", unsafe_allow_html=True)
@@ -128,16 +126,17 @@ with tab3:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("Lifestyle")
 
+    # IMPORTANT: only categories that models usually have
     work_type = st.selectbox(
         "Work Type",
-        ["Private","Self-employed","Govt_job","children","Never_worked"]
+        ["Private","Self-employed","Govt_job"]
     )
 
     res_type = st.selectbox("Residence Type", ["Urban","Rural"])
 
     smoking = st.selectbox(
         "Smoking Status",
-        ["never smoked","formerly smoked","smokes","Unknown"]
+        ["never smoked","formerly smoked","smokes"]
     )
 
     predict_btn = st.button("✨ Predict Stroke Risk")

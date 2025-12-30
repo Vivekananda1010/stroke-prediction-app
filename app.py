@@ -68,19 +68,20 @@ def predict(input_data):
         "ever_married","work_type","Residence_type","smoking_status"
     ]
 
-    # numeric → float
     df[numeric_features] = df[numeric_features].apply(pd.to_numeric, errors="coerce")
-
-    # categorical → string (VERY IMPORTANT — matches training)
     df[categorical_features] = df[categorical_features].astype(str)
 
-    # reorder
     df = df[MODEL_COLUMNS]
+
+    # 🔍 DEBUG — SEE EXACT DATA SENT TO MODEL
+    st.write("📌 DATAFRAME GOING TO MODEL")
+    st.write(df)
+    st.write("📌 COLUMN TYPES")
+    st.write(df.dtypes)
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred
-
 
 # ---------- TABS ----------
 tab1, tab2, tab3 = st.tabs(["🧑 Personal", "🩺 Health", "🏡 Lifestyle"])

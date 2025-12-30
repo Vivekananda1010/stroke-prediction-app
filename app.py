@@ -101,15 +101,13 @@ MODEL_COLUMNS = [
 def predict(input_data):
     df = pd.DataFrame([input_data])
 
-    # replace None with NaN (important for cloud)
+    # handle None/""
     df = df.replace({None: np.nan, "": np.nan})
 
-    # force correct numeric dtypes
-    df["hypertension"] = pd.to_numeric(df["hypertension"], errors="coerce").astype(float)
-    df["heart_disease"] = pd.to_numeric(df["heart_disease"], errors="coerce").astype(float)
-    df["age"] = pd.to_numeric(df["age"], errors="coerce").astype(float)
-    df["avg_glucose_level"] = pd.to_numeric(df["avg_glucose_level"], errors="coerce").astype(float)
-    df["bmi"] = pd.to_numeric(df["bmi"], errors="coerce").astype(float)
+    # FORCE numeric columns properly
+    num_cols = ["age","avg_glucose_level","bmi","hypertension","heart_disease"]
+    for c in num_cols:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
 
     # ensure all columns exist
     for col in MODEL_COLUMNS:
@@ -121,6 +119,7 @@ def predict(input_data):
 
     st.write("MODEL EXPECTS:", list(model.feature_names_in_))
     st.write("APP SENT:", list(df.columns))
+    st.write(df.dtypes)   # keep for now 🔍
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)

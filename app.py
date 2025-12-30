@@ -93,29 +93,25 @@ MODEL_COLUMNS = [
 def predict(input_data):
     df = pd.DataFrame([input_data])
 
-    # handle None/""
-    df = df.replace({None: np.nan, "": np.nan})
-
-    # FORCE numeric columns properly
+    # force correct types
     num_cols = ["age","avg_glucose_level","bmi","hypertension","heart_disease"]
-    for c in num_cols:
-        df[c] = pd.to_numeric(df[c], errors="coerce")
+    cat_cols = ["gender","ever_married","work_type","Residence_type","smoking_status"]
 
-    # ensure all columns exist
+    df[num_cols] = df[num_cols].apply(pd.to_numeric, errors="coerce")
+    df[cat_cols] = df[cat_cols].astype("string")
+
+    # ensure all model columns exist
     for col in MODEL_COLUMNS:
         if col not in df.columns:
             df[col] = np.nan
 
-    # reorder to model layout
+    # reorder to match training
     df = df[MODEL_COLUMNS]
-
-    st.write("MODEL EXPECTS:", list(model.feature_names_in_))
-    st.write("APP SENT:", list(df.columns))
-    st.write(df.dtypes)   # keep for now 🔍
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred
+
 
 # ---------- TABS ----------
 tab1, tab2, tab3 = st.tabs([

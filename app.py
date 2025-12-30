@@ -90,14 +90,14 @@ smoking_status = st.selectbox(
 features = {
     "gender": gender,
     "age": age,
-    "hypertension": hypertension,
-    "heart_disease": heart_disease,
-    "ever_married": ever_married,
+    "hypertension": hypertension,   # int
+    "heart_disease": heart_disease, # int
+    "ever_married": ever_married,   # <-- string now
     "work_type": work_type,
-    "Residence_type": Residence_type,
-    "avg_glucose_level": avg_glucose_level,
+    "Residence_type": res_type,
+    "avg_glucose_level": avg_glucose,
     "bmi": bmi,
-    "smoking_status": smoking_status,
+    "smoking_status": smoking
 }
 
 if st.button("🔮 Predict"):

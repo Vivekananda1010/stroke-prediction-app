@@ -22,14 +22,17 @@ body { background: linear-gradient(135deg, #e0f2fe, #fdf2f8); }
   box-shadow: 0 12px 30px rgba(0,0,0,.08);
   backdrop-filter: blur(6px);
 }
+
 .stButton>button {
     width: 100%;
     border-radius: 12px;
     padding: 10px;
     background: linear-gradient(135deg,#4f46e5,#3b82f6);
-    color:white; border:0;
+    color:white;
+    border:0;
 }
 .stButton>button:hover { transform: scale(1.01); }
+
 .center { text-align:center; }
 </style>
 """, unsafe_allow_html=True)
@@ -45,12 +48,25 @@ Beautiful, simple — and only for awareness (not medical advice).
 </div>
 """, unsafe_allow_html=True)
 
+
 # ---------- LOAD MODEL ----------
 model = joblib.load("stroke_model.pkl")
 thr = json.load(open("threshold.json"))["threshold"]
 
+
+# ---------- PREDICT FUNCTION ----------
 def predict(input_data):
     df = pd.DataFrame([input_data])
+
+    # FORCE CORRECT DATA TYPES (important!)
+    df["hypertension"] = df["hypertension"].astype(int)
+    df["heart_disease"] = df["heart_disease"].astype(int)
+
+    df["age"] = df["age"].astype(float)
+    df["avg_glucose_level"] = df["avg_glucose_level"].astype(float)
+    df["bmi"] = df["bmi"].astype(float)
+
+    # model inference
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred
@@ -81,8 +97,9 @@ with tab2:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("Health Profile")
 
-    hypertension = st.toggle("Hypertension")
-    heart_disease = st.toggle("Heart Disease")
+    # convert toggle -> 0/1 instead of True/False
+    hypertension = 1 if st.toggle("Hypertension") else 0
+    heart_disease = 1 if st.toggle("Heart Disease") else 0
 
     avg_glucose = st.slider("Average Glucose Level", 40.0, 300.0, 100.0)
     bmi = st.slider("BMI", 10.0, 60.0, 24.0)
@@ -99,30 +116,34 @@ with tab3:
         "Work Type",
         ["Private","Self-employed","Govt_job","children","Never_worked"]
     )
+
     res_type = st.selectbox("Residence Type", ["Urban","Rural"])
+
     smoking = st.selectbox(
         "Smoking Status",
         ["never smoked","formerly smoked","smokes","Unknown"]
     )
 
     predict_btn = st.button("✨ Predict Stroke Risk")
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ---------- RESULT ----------
 if predict_btn:
+
     features = {
         "age": age,
         "gender": gender,
         "ever_married": ever_married,
-        "hypertension": int(hypertension),
-        "heart_disease": int(heart_disease),
+        "hypertension": hypertension,
+        "heart_disease": heart_disease,
         "avg_glucose_level": avg_glucose,
         "bmi": bmi,
         "work_type": work_type,
         "Residence_type": res_type,
         "smoking_status": smoking
-}
+    }
 
     prob, pred = predict(features)
     prob_percent = round(prob * 100, 1)
@@ -144,8 +165,7 @@ if predict_btn:
     st.markdown("""
     ### 💡 Tips
     • Stay active  
-    • Control BP  
+    • Control blood pressure  
     • Monitor glucose  
     • Avoid smoking  
     """)
-

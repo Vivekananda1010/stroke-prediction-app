@@ -79,6 +79,15 @@ def predict(input_data):
     df = df[MODEL_COLUMNS]
 
     prob = model.predict_proba(df)[0][1]
+    st.write("DEBUG — dtypes:")
+    st.write(df.dtypes)
+
+    st.write("DEBUG — head:")
+    st.write(df.head())
+
+    st.write("MODEL EXPECTS:", list(model.feature_names_in_))
+    st.write("APP SENT:", list(df.columns))
+
     pred = int(prob >= thr)
     return prob, pred
 

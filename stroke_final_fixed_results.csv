@@ -1,0 +1,5 @@
+Model,ROC-AUC,PR-AUC,Sensitivity,Specificity,Precision,F2,MCC,Threshold
+Baseline,0.5,0.049,1.0,0.0,0.049,0.204,0.0,0.0
+Logistic Regression,0.838,0.184,0.707,0.804,0.156,0.414,0.265,0.073
+Random Forest,0.82,0.157,0.695,0.795,0.148,0.399,0.251,0.083
+XGBoost,0.829,0.176,0.743,0.79,0.153,0.42,0.27,0.068

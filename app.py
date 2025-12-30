@@ -83,6 +83,21 @@ MODEL_COLUMNS = [
     "smoking_status",
 ]
 
+import numpy as np
+
+MODEL_COLUMNS = [
+    "gender",
+    "age",
+    "hypertension",
+    "heart_disease",
+    "ever_married",
+    "work_type",
+    "Residence_type",
+    "avg_glucose_level",
+    "bmi",
+    "smoking_status",
+]
+
 def predict(input_data):
     df = pd.DataFrame([input_data])
 
@@ -110,9 +125,6 @@ def predict(input_data):
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred
-
-
-
 
 # ---------- TABS ----------
 tab1, tab2, tab3 = st.tabs([

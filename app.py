@@ -26,38 +26,31 @@ MODEL_COLUMNS = [
 # ---------------------------
 # PREDICT FUNCTION
 # ---------------------------
-def predict(row):
-    df = pd.DataFrame([row])
+def predict(input_data):
+    df = pd.DataFrame([input_data])
 
-    # numeric columns (MUST be float)
+    # Force correct numeric types
     df["age"] = pd.to_numeric(df["age"], errors="coerce")
     df["avg_glucose_level"] = pd.to_numeric(df["avg_glucose_level"], errors="coerce")
     df["bmi"] = pd.to_numeric(df["bmi"], errors="coerce")
 
-    # ⚠️ IMPORTANT: KEEP THESE AS INTEGERS (training dtype)
+    # These MUST be integers
     df["hypertension"] = pd.to_numeric(df["hypertension"], errors="coerce").astype("Int64")
     df["heart_disease"] = pd.to_numeric(df["heart_disease"], errors="coerce").astype("Int64")
 
-    # categorical — stay strings
-    cat_cols = [
-        "gender","ever_married","work_type",
-        "Residence_type","smoking_status"
-    ]
-    for c in cat_cols:
-        df[c] = df[c].astype(str)
+    # Categorical stay strings
+    df["ever_married"] = df["ever_married"].astype(str)
+    df["gender"] = df["gender"].astype(str)
+    df["work_type"] = df["work_type"].astype(str)
+    df["Residence_type"] = df["Residence_type"].astype(str)
+    df["smoking_status"] = df["smoking_status"].astype(str)
 
-    # reorder to match training
+    # Reorder to model columns
     df = df[MODEL_COLUMNS]
-
-    # debug view
-    st.write("📌 DATA TO MODEL")
-    st.write(df)
-    st.write(df.dtypes)
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred
-
 
 # ---------------------------
 # UI

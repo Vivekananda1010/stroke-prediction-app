@@ -4,7 +4,7 @@ import numpy as np
 import joblib
 import json
 
-st.set_page_config(page_title="Stroke Risk Predictor", layout="centered")
+st.set_page_config(page_title="Stroke Predictor", layout="centered")
 
 # ---------------------------
 # LOAD MODEL + THRESHOLD
@@ -18,50 +18,39 @@ def load_model():
 
 model, thr = load_model()
 
-# These MUST match training order
 MODEL_COLUMNS = [
     "gender","age","hypertension","heart_disease","ever_married",
     "work_type","Residence_type","avg_glucose_level","bmi","smoking_status"
 ]
 
-
 # ---------------------------
 # PREDICT FUNCTION
 # ---------------------------
-def predict(input_data):
-    df = pd.DataFrame([input_data])
+def predict(row):
+    df = pd.DataFrame([row])
 
-    # ---- FORCE DTYPE MATCHES (critical fix) ----
+    # numeric columns (MUST be float)
     df["age"] = pd.to_numeric(df["age"], errors="coerce")
     df["avg_glucose_level"] = pd.to_numeric(df["avg_glucose_level"], errors="coerce")
     df["bmi"] = pd.to_numeric(df["bmi"], errors="coerce")
 
-    # convert binary flags into Yes/No (model was trained on strings)
-    df["hypertension"] = df["hypertension"].astype(str).map(
-        {"0": "No", "1": "Yes", "No": "No", "Yes": "Yes"}
-    )
+    # ⚠️ IMPORTANT: KEEP THESE AS INTEGERS (training dtype)
+    df["hypertension"] = pd.to_numeric(df["hypertension"], errors="coerce").astype("Int64")
+    df["heart_disease"] = pd.to_numeric(df["heart_disease"], errors="coerce").astype("Int64")
 
-    df["heart_disease"] = df["heart_disease"].astype(str).map(
-        {"0": "No", "1": "Yes", "No": "No", "Yes": "Yes"}
-    )
-
-    df["ever_married"] = df["ever_married"].astype(str).map(
-        {"0": "No", "1": "Yes", "No": "No", "Yes": "Yes"}
-    )
-
-    # Ensure all are strings (categorical safety)
-    categorical_cols = [
-        "gender","hypertension","heart_disease",
-        "ever_married","work_type","Residence_type","smoking_status"
+    # categorical — stay strings
+    cat_cols = [
+        "gender","ever_married","work_type",
+        "Residence_type","smoking_status"
     ]
-    for c in categorical_cols:
+    for c in cat_cols:
         df[c] = df[c].astype(str)
 
-    # reorder strictly
+    # reorder to match training
     df = df[MODEL_COLUMNS]
 
-    # Debug panel (helps if anything breaks)
-    st.write("📌 DATA SENT TO MODEL")
+    # debug view
+    st.write("📌 DATA TO MODEL")
     st.write(df)
     st.write(df.dtypes)
 
@@ -73,22 +62,26 @@ def predict(input_data):
 # ---------------------------
 # UI
 # ---------------------------
-st.title("🩺 Stroke Risk Prediction App")
+st.title("🩺 Stroke Risk Prediction")
 
-st.write("Fill the details below to estimate risk of stroke 🚑")
+gender = st.selectbox("Gender", ["Male","Female","Other"])
+age = st.number_input("Age", 1, 120, 45)
 
-gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-age = st.number_input("Age", min_value=1, max_value=120, value=45)
-hypertension = st.selectbox("Hypertension (BP)", ["0", "1"])
-heart_disease = st.selectbox("Heart Disease", ["0", "1"])
-ever_married = st.selectbox("Ever Married", ["Yes", "No"])
+hypertension = st.selectbox("Hypertension (0 = No, 1 = Yes)", ["0","1"])
+heart_disease = st.selectbox("Heart Disease (0 = No, 1 = Yes)", ["0","1"])
+
+ever_married = st.selectbox("Ever Married", ["Yes","No"])
+
 work_type = st.selectbox(
     "Work Type",
     ["Private","Self-employed","Govt_job","children","Never_worked"]
 )
+
 Residence_type = st.selectbox("Residence Type", ["Urban","Rural"])
-avg_glucose_level = st.number_input("Avg Glucose Level", min_value=40.0, max_value=300.0, value=100.0)
-bmi = st.number_input("BMI", min_value=10.0, max_value=60.0, value=24.0)
+
+avg_glucose_level = st.number_input("Avg Glucose Level", 40.0, 300.0, 100.0)
+bmi = st.number_input("BMI", 10.0, 60.0, 24.0)
+
 smoking_status = st.selectbox(
     "Smoking Status",
     ["never smoked","formerly smoked","smokes","Unknown"]
@@ -104,7 +97,7 @@ features = {
     "Residence_type": Residence_type,
     "avg_glucose_level": avg_glucose_level,
     "bmi": bmi,
-    "smoking_status": smoking_status
+    "smoking_status": smoking_status,
 }
 
 if st.button("🔮 Predict"):
@@ -112,6 +105,6 @@ if st.button("🔮 Predict"):
 
     st.success(f"Probability of Stroke: {prob:.3f}")
     if pred == 1:
-        st.error("⚠️ High Risk — please consult a doctor.")
+        st.error("⚠️ High Risk — consult a doctor.")
     else:
-        st.info("✅ Low Risk — maintain healthy habits.")
+        st.info("✅ Low Risk — keep healthy habits.")

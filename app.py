@@ -29,23 +29,13 @@ MODEL_COLUMNS = [
 def predict(input_data):
     df = pd.DataFrame([input_data])
 
-    # Force correct numeric types
     df["age"] = pd.to_numeric(df["age"], errors="coerce")
     df["avg_glucose_level"] = pd.to_numeric(df["avg_glucose_level"], errors="coerce")
     df["bmi"] = pd.to_numeric(df["bmi"], errors="coerce")
 
-    # These MUST be integers
     df["hypertension"] = pd.to_numeric(df["hypertension"], errors="coerce").astype("Int64")
     df["heart_disease"] = pd.to_numeric(df["heart_disease"], errors="coerce").astype("Int64")
 
-    # Categorical stay strings
-    df["ever_married"] = df["ever_married"].astype(str)
-    df["gender"] = df["gender"].astype(str)
-    df["work_type"] = df["work_type"].astype(str)
-    df["Residence_type"] = df["Residence_type"].astype(str)
-    df["smoking_status"] = df["smoking_status"].astype(str)
-
-    # Reorder to model columns
     df = df[MODEL_COLUMNS]
 
     prob = model.predict_proba(df)[0][1]
@@ -83,14 +73,14 @@ smoking_status = st.selectbox(
 features = {
     "gender": gender,
     "age": age,
-    "hypertension": hypertension,   # int
-    "heart_disease": heart_disease, # int
-    "ever_married": ever_married,   # <-- string now
+    "hypertension": hypertension,
+    "heart_disease": heart_disease,
+    "ever_married": ever_married,
     "work_type": work_type,
-    "Residence_type": res_type if "res_type" in locals() else res_type,
-    "avg_glucose_level": avg_glucose,
+    "Residence_type": Residence_type,
+    "avg_glucose_level": avg_glucose_level,
     "bmi": bmi,
-    "smoking_status": smoking
+    "smoking_status": smoking_status
 }
 
 if st.button("🔮 Predict"):

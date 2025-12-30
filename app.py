@@ -62,13 +62,14 @@ MODEL_COLUMNS = [
 def predict(input_data):
     df = pd.DataFrame([input_data])
 
-    num_cols = ["age","avg_glucose_level","bmi","hypertension","heart_disease"]
-    cat_cols = ["gender","ever_married","work_type","Residence_type","smoking_status"]
+    # numeric + categorical groups (IMPORTANT)
+    num_cols = ["age","avg_glucose_level","bmi","hypertension","heart_disease","ever_married"]
+    cat_cols = ["gender","work_type","Residence_type","smoking_status"]
 
     # numeric → float (for imputers)
     df[num_cols] = df[num_cols].apply(pd.to_numeric, errors="coerce").astype(float)
 
-    # categorical → object (not pandas string)
+    # categorical → object
     df[cat_cols] = df[cat_cols].astype(object)
 
     # guarantee all model columns exist
@@ -76,18 +77,10 @@ def predict(input_data):
         if col not in df.columns:
             df[col] = np.nan
 
+    # reorder
     df = df[MODEL_COLUMNS]
 
     prob = model.predict_proba(df)[0][1]
-    st.write("DEBUG — dtypes:")
-    st.write(df.dtypes)
-
-    st.write("DEBUG — head:")
-    st.write(df.head())
-
-    st.write("MODEL EXPECTS:", list(model.feature_names_in_))
-    st.write("APP SENT:", list(df.columns))
-
     pred = int(prob >= thr)
     return prob, pred
 
@@ -107,7 +100,9 @@ with tab1:
     age = col1.slider("Age", 1, 100, 45)
     gender = col2.selectbox("Gender", ["Male", "Female", "Other"])
 
-    ever_married = st.radio("Ever Married?", ["Yes", "No"])
+    # IMPORTANT: convert Yes/No → 1/0
+    ever_married = 1 if st.radio("Ever Married?", ["Yes", "No"]) == "Yes" else 0
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ------- TAB 2 -------

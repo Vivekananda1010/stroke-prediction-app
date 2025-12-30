@@ -62,21 +62,18 @@ MODEL_COLUMNS = [
 def predict(input_data):
     df = pd.DataFrame([input_data])
 
-    numeric_features = ["age","avg_glucose_level","bmi"]
-    categorical_features = [
-        "gender","hypertension","heart_disease",
-        "ever_married","work_type","Residence_type","smoking_status"
-    ]
+    # --- FORCE THE SAME FORM AS TRAINING ---
+    df["hypertension"] = df["hypertension"].map({1: "Yes", 0: "No", "1": "Yes", "0": "No"})
+    df["heart_disease"] = df["heart_disease"].map({1: "Yes", 0: "No", "1": "Yes", "0": "No"})
+    df["ever_married"] = df["ever_married"].map({"Yes": "Yes", "No": "No", 1: "Yes", 0: "No"})
 
+    numeric_features = ["age","avg_glucose_level","bmi"]
     df[numeric_features] = df[numeric_features].apply(pd.to_numeric, errors="coerce")
-    df[categorical_features] = df[categorical_features].astype(str)
 
     df = df[MODEL_COLUMNS]
 
-    # 🔍 DEBUG — DO NOT REMOVE
-    st.write("📌 DATAFRAME GOING TO MODEL")
+    st.write("📌 DATAFRAME GOING TO MODEL (FINAL)")
     st.write(df)
-    st.write("📌 COLUMN TYPES")
     st.write(df.dtypes)
 
     prob = model.predict_proba(df)[0][1]

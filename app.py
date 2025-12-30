@@ -70,7 +70,7 @@ age = st.number_input("Age", 1, 120, 45)
 hypertension = st.selectbox("Hypertension (0 = No, 1 = Yes)", ["0","1"])
 heart_disease = st.selectbox("Heart Disease (0 = No, 1 = Yes)", ["0","1"])
 
-ever_married = st.selectbox("Ever Married", ["Yes","No"])
+ever_married = 1 if st.radio("Ever Married?", ["Yes", "No"]) == "Yes" else 0
 
 work_type = st.selectbox(
     "Work Type",

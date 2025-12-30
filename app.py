@@ -73,7 +73,7 @@ def predict(input_data):
 
     df = df[MODEL_COLUMNS]
 
-    # 🔍 DEBUG — SEE EXACT DATA SENT TO MODEL
+    # 🔍 DEBUG — DO NOT REMOVE
     st.write("📌 DATAFRAME GOING TO MODEL")
     st.write(df)
     st.write("📌 COLUMN TYPES")
@@ -82,6 +82,7 @@ def predict(input_data):
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred
+
 
 # ---------- TABS ----------
 tab1, tab2, tab3 = st.tabs(["🧑 Personal", "🩺 Health", "🏡 Lifestyle"])

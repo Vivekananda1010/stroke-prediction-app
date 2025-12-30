@@ -56,16 +56,8 @@ thr = json.load(open("threshold.json"))["threshold"]
 
 # ---------- PREDICT FUNCTION ----------
 MODEL_COLUMNS = [
-    "gender",
-    "age",
-    "hypertension",
-    "heart_disease",
-    "ever_married",
-    "work_type",
-    "Residence_type",
-    "avg_glucose_level",
-    "bmi",
-    "smoking_status",
+    "gender","age","hypertension","heart_disease","ever_married",
+    "work_type","Residence_type","avg_glucose_level","bmi","smoking_status",
 ]
 
 import numpy as np

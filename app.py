@@ -17,32 +17,25 @@ thr = json.load(open("threshold.json"))["threshold"]
 
 # ---------- PREDICT FUNCTION ----------
 def predict(input_data):
-
     df = pd.DataFrame([input_data])
 
-    df = df.reindex(columns=list(model.feature_names_in_))
-
-    # numeric columns actually used by your model
-    num_cols = ["age","bmi"]
-
-    # glucose belongs here (categorical)
-    cat_cols = [
-        "gender",
-        "hypertension",
-        "heart_disease",
-        "ever_married",
-        "work_type",
-        "Residence_type",
-        "smoking_status",
-        "avg_glucose_level"
+    numeric_features = ["age","avg_glucose_level","bmi"]
+    categorical_features = [
+        "gender","hypertension","heart_disease",
+        "ever_married","work_type","Residence_type","smoking_status"
     ]
 
-    df[num_cols] = df[num_cols].apply(pd.to_numeric, errors="coerce").astype("float64")
+    # numeric -> float
+    df[numeric_features] = df[numeric_features].apply(pd.to_numeric, errors="coerce")
 
-    df[cat_cols] = df[cat_cols].astype(str)
+    # categorical -> string (VERY IMPORTANT)
+    df[categorical_features] = df[categorical_features].astype(str)
+
+    df = df[MODEL_COLUMNS]
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
+
     return prob, pred
 
 # ---------- UI ----------

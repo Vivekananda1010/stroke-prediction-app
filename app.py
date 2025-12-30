@@ -2,6 +2,7 @@ import streamlit as st
 import joblib
 import json
 import pandas as pd
+import numpy as np
 import time
 
 st.set_page_config(
@@ -37,7 +38,6 @@ body { background: linear-gradient(135deg, #e0f2fe, #fdf2f8); }
 </style>
 """, unsafe_allow_html=True)
 
-
 # ---------- HEADER ----------
 st.markdown("""
 <div class="card">
@@ -48,70 +48,39 @@ Beautiful, simple — and only for awareness (not medical advice).
 </div>
 """, unsafe_allow_html=True)
 
-
 # ---------- LOAD MODEL ----------
 model = joblib.load("stroke_model.pkl")
 thr = json.load(open("threshold.json"))["threshold"]
 
-
-# ---------- PREDICT FUNCTION ----------
+# ---------- MODEL COLUMNS ----------
 MODEL_COLUMNS = [
     "gender","age","hypertension","heart_disease","ever_married",
     "work_type","Residence_type","avg_glucose_level","bmi","smoking_status",
 ]
 
-import numpy as np
-
-MODEL_COLUMNS = [
-    "gender",
-    "age",
-    "hypertension",
-    "heart_disease",
-    "ever_married",
-    "work_type",
-    "Residence_type",
-    "avg_glucose_level",
-    "bmi",
-    "smoking_status",
-]
-
-import numpy as np
-
-MODEL_COLUMNS = [
-    "gender",
-    "age",
-    "hypertension",
-    "heart_disease",
-    "ever_married",
-    "work_type",
-    "Residence_type",
-    "avg_glucose_level",
-    "bmi",
-    "smoking_status",
-]
-
+# ---------- PREDICT FUNCTION ----------
 def predict(input_data):
     df = pd.DataFrame([input_data])
 
-    # force correct types
     num_cols = ["age","avg_glucose_level","bmi","hypertension","heart_disease"]
     cat_cols = ["gender","ever_married","work_type","Residence_type","smoking_status"]
 
-    df[num_cols] = df[num_cols].apply(pd.to_numeric, errors="coerce")
-    df[cat_cols] = df[cat_cols].astype("string")
+    # numeric → float (for imputers)
+    df[num_cols] = df[num_cols].apply(pd.to_numeric, errors="coerce").astype(float)
 
-    # ensure all model columns exist
+    # categorical → object (not pandas string)
+    df[cat_cols] = df[cat_cols].astype(object)
+
+    # guarantee all model columns exist
     for col in MODEL_COLUMNS:
         if col not in df.columns:
             df[col] = np.nan
 
-    # reorder to match training
     df = df[MODEL_COLUMNS]
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred
-
 
 # ---------- TABS ----------
 tab1, tab2, tab3 = st.tabs([
@@ -132,7 +101,6 @@ with tab1:
     ever_married = st.radio("Ever Married?", ["Yes", "No"])
     st.markdown("</div>", unsafe_allow_html=True)
 
-
 # ------- TAB 2 -------
 with tab2:
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -145,7 +113,6 @@ with tab2:
     bmi = st.slider("BMI", 10.0, 60.0, 24.0)
 
     st.markdown("</div>", unsafe_allow_html=True)
-
 
 # ------- TAB 3 -------
 with tab3:
@@ -167,7 +134,6 @@ with tab3:
     predict_btn = st.button("✨ Predict Stroke Risk")
 
     st.markdown("</div>", unsafe_allow_html=True)
-
 
 # ---------- RESULT ----------
 if predict_btn:

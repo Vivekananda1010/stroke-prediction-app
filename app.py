@@ -55,10 +55,23 @@ thr = json.load(open("threshold.json"))["threshold"]
 
 
 # ---------- PREDICT FUNCTION ----------
+MODEL_COLUMNS = [
+    "gender",
+    "age",
+    "hypertension",
+    "heart_disease",
+    "ever_married",
+    "work_type",
+    "Residence_type",
+    "avg_glucose_level",
+    "bmi",
+    "smoking_status",
+]
+
 def predict(input_data):
     df = pd.DataFrame([input_data])
 
-    # --- FORCE CORRECT DATA TYPES ---
+    # correct data types
     df["hypertension"] = df["hypertension"].astype(int)
     df["heart_disease"] = df["heart_disease"].astype(int)
 
@@ -66,21 +79,15 @@ def predict(input_data):
     df["avg_glucose_level"] = df["avg_glucose_level"].astype(float)
     df["bmi"] = df["bmi"].astype(float)
 
-    # --- ENSURE ALL COLUMNS EXIST + SAME ORDER AS TRAINING ---
-    required = [
-        "age","avg_glucose_level","bmi",
-        "gender","hypertension","heart_disease",
-        "ever_married","work_type",
-        "Residence_type","smoking_status"
-    ]
-
-    for col in required:
+    # ensure all columns exist
+    for col in MODEL_COLUMNS:
         if col not in df.columns:
             df[col] = None
 
-    df = df[required]
+    # reorder exactly as model was trained
+    df = df[MODEL_COLUMNS]
 
-    # debug (we WANT this to show 🔍)
+    # (optional debug)
     st.write("MODEL EXPECTS:", list(model.feature_names_in_))
     st.write("APP SENT:", list(df.columns))
 
@@ -115,7 +122,6 @@ with tab2:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("Health Profile")
 
-    # convert toggle -> 0/1 instead of True/False
     hypertension = 1 if st.toggle("Hypertension") else 0
     heart_disease = 1 if st.toggle("Heart Disease") else 0
 
@@ -151,15 +157,15 @@ with tab3:
 if predict_btn:
 
     features = {
-        "age": age,
         "gender": gender,
-        "ever_married": ever_married,
+        "age": age,
         "hypertension": hypertension,
         "heart_disease": heart_disease,
-        "avg_glucose_level": avg_glucose,
-        "bmi": bmi,
+        "ever_married": ever_married,
         "work_type": work_type,
         "Residence_type": res_type,
+        "avg_glucose_level": avg_glucose,
+        "bmi": bmi,
         "smoking_status": smoking
     }
 

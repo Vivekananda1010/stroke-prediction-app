@@ -68,32 +68,49 @@ MODEL_COLUMNS = [
     "smoking_status",
 ]
 
+import numpy as np
+
+MODEL_COLUMNS = [
+    "gender",
+    "age",
+    "hypertension",
+    "heart_disease",
+    "ever_married",
+    "work_type",
+    "Residence_type",
+    "avg_glucose_level",
+    "bmi",
+    "smoking_status",
+]
+
 def predict(input_data):
     df = pd.DataFrame([input_data])
 
-    # correct data types
-    df["hypertension"] = df["hypertension"].astype(int)
-    df["heart_disease"] = df["heart_disease"].astype(int)
+    # replace None with NaN (important for cloud)
+    df = df.replace({None: np.nan, "": np.nan})
 
-    df["age"] = df["age"].astype(float)
-    df["avg_glucose_level"] = df["avg_glucose_level"].astype(float)
-    df["bmi"] = df["bmi"].astype(float)
+    # force correct numeric dtypes
+    df["hypertension"] = pd.to_numeric(df["hypertension"], errors="coerce").astype(float)
+    df["heart_disease"] = pd.to_numeric(df["heart_disease"], errors="coerce").astype(float)
+    df["age"] = pd.to_numeric(df["age"], errors="coerce").astype(float)
+    df["avg_glucose_level"] = pd.to_numeric(df["avg_glucose_level"], errors="coerce").astype(float)
+    df["bmi"] = pd.to_numeric(df["bmi"], errors="coerce").astype(float)
 
     # ensure all columns exist
     for col in MODEL_COLUMNS:
         if col not in df.columns:
-            df[col] = None
+            df[col] = np.nan
 
-    # reorder exactly as model was trained
+    # reorder to model layout
     df = df[MODEL_COLUMNS]
 
-    # (optional debug)
     st.write("MODEL EXPECTS:", list(model.feature_names_in_))
     st.write("APP SENT:", list(df.columns))
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred
+
 
 
 

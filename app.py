@@ -20,13 +20,10 @@ def predict(input_data):
 
     df = pd.DataFrame([input_data])
 
-    # align dataframe exactly to model schema
     df = df.reindex(columns=list(model.feature_names_in_))
 
-    # model numeric columns (from pipeline)
-    num_cols = ["age", "avg_glucose_level", "bmi"]
+    num_cols = ["age","avg_glucose_level","bmi"]
 
-    # model categorical columns
     cat_cols = [
         "gender",
         "hypertension",
@@ -37,14 +34,14 @@ def predict(input_data):
         "smoking_status",
     ]
 
-    # enforce dtypes EXACTLY as training
     df[num_cols] = df[num_cols].apply(pd.to_numeric, errors="coerce").astype("float64")
-    df[cat_cols] = df[cat_cols].astype(object)
+
+    # 🔥 CRITICAL FIX — ensure categoricals are STRINGS
+    df[cat_cols] = df[cat_cols].astype(str)
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred
-
 
 # ---------- UI ----------
 tab1, tab2, tab3 = st.tabs(["🧑 Personal","🩺 Health","🏡 Lifestyle"])

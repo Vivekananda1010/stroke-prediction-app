@@ -122,7 +122,7 @@ if predict_btn:
         "work_type": work_type,
         "Residence_type": res_type,
         "smoking_status": smoking
-    }
+}
 
     prob, pred = predict(features)
     prob_percent = round(prob * 100, 1)

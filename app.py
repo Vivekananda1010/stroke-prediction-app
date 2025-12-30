@@ -4,6 +4,9 @@ import numpy as np
 import joblib
 import json
 
+import sklearn
+st.warning(f"sklearn version running on server: {sklearn.__version__}")
+
 st.set_page_config(page_title="Stroke Predictor", layout="centered")
 
 # ---------------------------

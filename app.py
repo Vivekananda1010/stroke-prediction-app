@@ -52,37 +52,42 @@ Beautiful, simple — and only for awareness (not medical advice).
 model = joblib.load("stroke_model.pkl")
 thr = json.load(open("threshold.json"))["threshold"]
 
-# ---------- MODEL COLUMNS ----------
-MODEL_COLUMNS = [
-    "gender","age","hypertension","heart_disease","ever_married",
-    "work_type","Residence_type","avg_glucose_level","bmi","smoking_status",
-]
-
 # ---------- PREDICT FUNCTION ----------
 def predict(input_data):
+
+    # Build df from input
     df = pd.DataFrame([input_data])
 
-    # numeric + categorical groups (IMPORTANT)
-    num_cols = ["age","avg_glucose_level","bmi","hypertension","heart_disease","ever_married"]
-    cat_cols = ["gender","work_type","Residence_type","smoking_status"]
+    # ALWAYS align to what the model expects
+    expected = list(model.feature_names_in_)
+    df = df.reindex(columns=expected)
 
-    # numeric → float (for imputers)
-    df[num_cols] = df[num_cols].apply(pd.to_numeric, errors="coerce").astype(float)
+    # numeric & categorical groups (from training)
+    num_cols = [
+        "age",
+        "avg_glucose_level",
+        "bmi",
+        "hypertension",
+        "heart_disease",
+        "ever_married"
+    ]
 
-    # categorical → object
+    cat_cols = [
+        "gender",
+        "work_type",
+        "Residence_type",
+        "smoking_status",
+    ]
+
+    # ---- CRITICAL: force exact dtypes ----
+    df[num_cols] = df[num_cols].apply(pd.to_numeric, errors="coerce").astype("float64")
     df[cat_cols] = df[cat_cols].astype(object)
-
-    # guarantee all model columns exist
-    for col in MODEL_COLUMNS:
-        if col not in df.columns:
-            df[col] = np.nan
-
-    # reorder
-    df = df[MODEL_COLUMNS]
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
+
     return prob, pred
+
 
 # ---------- TABS ----------
 tab1, tab2, tab3 = st.tabs([
@@ -100,7 +105,7 @@ with tab1:
     age = col1.slider("Age", 1, 100, 45)
     gender = col2.selectbox("Gender", ["Male", "Female", "Other"])
 
-    # IMPORTANT: convert Yes/No → 1/0
+    # convert Yes/No to numeric (model expects numeric)
     ever_married = 1 if st.radio("Ever Married?", ["Yes", "No"]) == "Yes" else 0
 
     st.markdown("</div>", unsafe_allow_html=True)

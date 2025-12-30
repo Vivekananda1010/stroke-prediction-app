@@ -15,24 +15,29 @@ st.set_page_config(
 model = joblib.load("stroke_model.pkl")
 thr = json.load(open("threshold.json"))["threshold"]
 
-# ---------- INSPECT MODEL ----------
-pre = model.named_steps["preprocessor"]
-
-num_cols = pre.transformers_[0][2]
-cat_cols = pre.transformers_[1][2]
-
-st.sidebar.write("🔍 Model numeric cols:", num_cols)
-st.sidebar.write("🔍 Model categorical cols:", cat_cols)
-
-# ---------- PREDICT ----------
+# ---------- PREDICT FUNCTION ----------
 def predict(input_data):
 
     df = pd.DataFrame([input_data])
 
-    # align exact to pipeline schema
+    # align dataframe exactly to model schema
     df = df.reindex(columns=list(model.feature_names_in_))
 
-    # enforce exact dtypes
+    # model numeric columns (from pipeline)
+    num_cols = ["age", "avg_glucose_level", "bmi"]
+
+    # model categorical columns
+    cat_cols = [
+        "gender",
+        "hypertension",
+        "heart_disease",
+        "ever_married",
+        "work_type",
+        "Residence_type",
+        "smoking_status",
+    ]
+
+    # enforce dtypes EXACTLY as training
     df[num_cols] = df[num_cols].apply(pd.to_numeric, errors="coerce").astype("float64")
     df[cat_cols] = df[cat_cols].astype(object)
 
@@ -41,26 +46,27 @@ def predict(input_data):
     return prob, pred
 
 
-# UI BELOW ⬇️ (unchanged)
+# ---------- UI ----------
 tab1, tab2, tab3 = st.tabs(["🧑 Personal","🩺 Health","🏡 Lifestyle"])
 
 with tab1:
     age = st.slider("Age", 1, 100, 45)
     gender = st.selectbox("Gender", ["Male","Female"])
-    ever_married = 1 if st.radio("Ever Married?",["Yes","No"])=="Yes" else 0
+    ever_married = st.selectbox("Ever Married?", ["Yes","No"])
 
 with tab2:
-    hypertension = 1 if st.toggle("Hypertension") else 0
-    heart_disease = 1 if st.toggle("Heart Disease") else 0
-    avg_glucose = st.slider("Average Glucose Level",40.0,300.0,100.0)
-    bmi = st.slider("BMI",10.0,60.0,24.0)
+    hypertension = st.selectbox("Hypertension", [0,1])
+    heart_disease = st.selectbox("Heart Disease", [0,1])
+    avg_glucose = st.slider("Average Glucose Level", 40.0, 300.0, 100.0)
+    bmi = st.slider("BMI", 10.0, 60.0, 24.0)
 
 with tab3:
-    work_type = st.selectbox("Work Type",["Private","Self-employed","Govt_job"])
+    work_type = st.selectbox("Work Type",["Private","Self-employed","Govt_job","children","Never_worked"])
     res_type = st.selectbox("Residence Type",["Urban","Rural"])
-    smoking = st.selectbox("Smoking Status",["never smoked","formerly smoked","smokes"])
+    smoking = st.selectbox("Smoking Status",["never smoked","formerly smoked","smokes","Unknown"])
     predict_btn = st.button("✨ Predict Stroke Risk")
 
+# ---------- PREDICT ----------
 if predict_btn:
 
     features = {
@@ -77,5 +83,11 @@ if predict_btn:
     }
 
     prob, pred = predict(features)
+    prob_percent = round(prob * 100, 1)
 
-    st.success(f"Risk: {round(prob*100,1)}%")
+    st.info(f"Risk Level: {prob_percent}%")
+
+    if pred == 1:
+        st.error("⚠️ Higher stroke risk — consult a medical professional.")
+    else:
+        st.success("💚 Low stroke risk — keep healthy habits!")

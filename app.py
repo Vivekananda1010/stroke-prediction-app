@@ -33,14 +33,16 @@ def predict(input_data):
     df["avg_glucose_level"] = pd.to_numeric(df["avg_glucose_level"], errors="coerce")
     df["bmi"] = pd.to_numeric(df["bmi"], errors="coerce")
 
-    df["hypertension"] = pd.to_numeric(df["hypertension"], errors="coerce").astype("Int64")
-    df["heart_disease"] = pd.to_numeric(df["heart_disease"], errors="coerce").astype("Int64")
+    # MUST be plain ints (not Pandas Int64)
+    df["hypertension"] = pd.to_numeric(df["hypertension"], errors="coerce").astype(int)
+    df["heart_disease"] = pd.to_numeric(df["heart_disease"], errors="coerce").astype(int)
 
-    df = df[MODEL_COLUMNS]
+    df = df[MODEL_COLUMNS].copy()
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred
+
 
 # ---------------------------
 # UI

@@ -58,7 +58,7 @@ thr = json.load(open("threshold.json"))["threshold"]
 def predict(input_data):
     df = pd.DataFrame([input_data])
 
-    # FORCE CORRECT DATA TYPES (important!)
+    # --- FORCE CORRECT DATA TYPES ---
     df["hypertension"] = df["hypertension"].astype(int)
     df["heart_disease"] = df["heart_disease"].astype(int)
 
@@ -66,13 +66,28 @@ def predict(input_data):
     df["avg_glucose_level"] = df["avg_glucose_level"].astype(float)
     df["bmi"] = df["bmi"].astype(float)
 
-    # model inference
+    # --- ENSURE ALL COLUMNS EXIST + SAME ORDER AS TRAINING ---
+    required = [
+        "age","avg_glucose_level","bmi",
+        "gender","hypertension","heart_disease",
+        "ever_married","work_type",
+        "Residence_type","smoking_status"
+    ]
+
+    for col in required:
+        if col not in df.columns:
+            df[col] = None
+
+    df = df[required]
+
+    # debug (we WANT this to show 🔍)
     st.write("MODEL EXPECTS:", list(model.feature_names_in_))
     st.write("APP SENT:", list(df.columns))
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred
+
 
 
 # ---------- TABS ----------

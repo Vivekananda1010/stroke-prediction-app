@@ -11,11 +11,54 @@ st.set_page_config(
     layout="wide",
 )
 
+# ---------- STYLE ----------
+st.markdown("""
+<style>
+body { background: linear-gradient(135deg, #e0f2fe, #fdf2f8); }
+
+.card {
+  background: rgba(255,255,255,.88);
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.08);
+  backdrop-filter: blur(6px);
+}
+
+.stButton>button {
+    width: 100%;
+    border-radius: 12px;
+    padding: 10px;
+    background: linear-gradient(135deg,#4f46e5,#3b82f6);
+    color:white;
+    border:0;
+}
+.stButton>button:hover { transform: scale(1.01); }
+
+.center { text-align:center; }
+</style>
+""", unsafe_allow_html=True)
+
+# ---------- HEADER ----------
+st.markdown("""
+<div class="card">
+<h2 class="center">🧠 Stroke Risk Predictor</h2>
+<p class="center" style="color:gray;">
+Beautiful, simple — for awareness only (not medical advice).
+</p>
+</div>
+""", unsafe_allow_html=True)
+
 # ---------- LOAD MODEL ----------
 model = joblib.load("stroke_model.pkl")
 thr = json.load(open("threshold.json"))["threshold"]
 
-# ---------- PREDICT FUNCTION ----------
+# ---------- MODEL COLUMNS ----------
+MODEL_COLUMNS = [
+    "gender","age","hypertension","heart_disease","ever_married",
+    "work_type","Residence_type","avg_glucose_level","bmi","smoking_status",
+]
+
+# ---------- PREDICT ----------
 def predict(input_data):
     df = pd.DataFrame([input_data])
 
@@ -25,40 +68,76 @@ def predict(input_data):
         "ever_married","work_type","Residence_type","smoking_status"
     ]
 
-    # numeric -> float
+    # numeric → float
     df[numeric_features] = df[numeric_features].apply(pd.to_numeric, errors="coerce")
 
-    # categorical -> string (VERY IMPORTANT)
+    # categorical → string (VERY IMPORTANT — matches training)
     df[categorical_features] = df[categorical_features].astype(str)
 
+    # reorder
     df = df[MODEL_COLUMNS]
 
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
-
     return prob, pred
 
-# ---------- UI ----------
-tab1, tab2, tab3 = st.tabs(["🧑 Personal","🩺 Health","🏡 Lifestyle"])
 
+# ---------- TABS ----------
+tab1, tab2, tab3 = st.tabs(["🧑 Personal", "🩺 Health", "🏡 Lifestyle"])
+
+
+# ------- TAB 1 -------
 with tab1:
-    age = st.slider("Age", 1, 100, 45)
-    gender = st.selectbox("Gender", ["Male","Female"])
-    ever_married = st.selectbox("Ever Married?", ["Yes","No"])
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("Personal Info")
 
+    col1, col2 = st.columns(2)
+    age = col1.slider("Age", 1, 100, 45)
+    gender = col2.selectbox("Gender", ["Male", "Female", "Other"])
+
+    ever_married = st.radio("Ever Married?", ["Yes", "No"])
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+# ------- TAB 2 -------
 with tab2:
-    hypertension = st.selectbox("Hypertension", [0,1])
-    heart_disease = st.selectbox("Heart Disease", [0,1])
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("Health Profile")
+
+    # keep categorical 0/1 as STRINGS (model expects categorical)
+    hypertension = "1" if st.toggle("Hypertension") else "0"
+    heart_disease = "1" if st.toggle("Heart Disease") else "0"
+
     avg_glucose = st.slider("Average Glucose Level", 40.0, 300.0, 100.0)
     bmi = st.slider("BMI", 10.0, 60.0, 24.0)
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+# ------- TAB 3 -------
 with tab3:
-    work_type = st.selectbox("Work Type",["Private","Self-employed","Govt_job","children","Never_worked"])
-    res_type = st.selectbox("Residence Type",["Urban","Rural"])
-    smoking = st.selectbox("Smoking Status",["never smoked","formerly smoked","smokes","Unknown"])
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("Lifestyle")
+
+    work_type = st.selectbox(
+        "Work Type",
+        ["Private","Self-employed","Govt_job","children","Never_worked"]
+    )
+
+    res_type = st.selectbox("Residence Type", ["Urban","Rural"])
+
+    smoking = st.selectbox(
+        "Smoking Status",
+        ["never smoked","formerly smoked","smokes","Unknown"]
+    )
+
     predict_btn = st.button("✨ Predict Stroke Risk")
 
-# ---------- PREDICT ----------
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+# ---------- RESULT ----------
 if predict_btn:
 
     features = {
@@ -77,9 +156,24 @@ if predict_btn:
     prob, pred = predict(features)
     prob_percent = round(prob * 100, 1)
 
-    st.info(f"Risk Level: {prob_percent}%")
+    with st.spinner("Analyzing…"):
+        time.sleep(1)
+
+    st.markdown(f"""
+    <div class="card">
+        <h3 class="center">Risk Level: {prob_percent}%</h3>
+    </div>
+    """, unsafe_allow_html=True)
 
     if pred == 1:
-        st.error("⚠️ Higher stroke risk — consult a medical professional.")
+        st.error("⚠️ High Stroke Risk — consult a medical professional.")
     else:
-        st.success("💚 Low stroke risk — keep healthy habits!")
+        st.success("💚 Low Stroke Risk — keep healthy habits!")
+
+    st.markdown("""
+    ### 💡 Tips
+    • Stay active  
+    • Control blood pressure  
+    • Monitor glucose  
+    • Avoid smoking  
+    """)

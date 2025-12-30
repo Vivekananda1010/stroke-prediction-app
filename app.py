@@ -87,7 +87,7 @@ features = {
     "heart_disease": heart_disease, # int
     "ever_married": ever_married,   # <-- string now
     "work_type": work_type,
-    "Residence_type": res_type,
+    "Residence_type": res_type if "res_type" in locals() else res_type,
     "avg_glucose_level": avg_glucose,
     "bmi": bmi,
     "smoking_status": smoking

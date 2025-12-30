@@ -67,6 +67,9 @@ def predict(input_data):
     df["bmi"] = df["bmi"].astype(float)
 
     # model inference
+    st.write("MODEL EXPECTS:", list(model.feature_names_in_))
+    st.write("APP SENT:", list(df.columns))
+
     prob = model.predict_proba(df)[0][1]
     pred = int(prob >= thr)
     return prob, pred

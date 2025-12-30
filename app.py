@@ -6,7 +6,7 @@ import time
 
 st.set_page_config(
     page_title="Stroke Risk Predictor",
-    page_icon="🩺",
+    page_icon="🧠",
     layout="wide",
 )
 
